@@ -24,8 +24,10 @@ RegisterCommand(config.commandName, function(source, args, raw)
             laserSight = false
             TriggerServerEvent("LSLaser:Set", false)
         else
-            laserSight = true
-            TriggerServerEvent("LSLaser:Set", true)
+            if not config.supportedWeapons.checkcomponent or hasFlashlightComponent(ped, pedWeapon) then
+                laserSight = true
+                TriggerServerEvent("LSLaser:Set", true)
+            end
         end
     end
 end)
@@ -78,13 +80,22 @@ Citizen.CreateThread(function()
 
         if laserSight then
             local laserOn = LocalPlayer.state.laserOn
+            local pedWeapon = GetSelectedPedWeapon(ped)
             if IsPlayerFreeAiming(PlayerId()) then
-                if not laserOn then
-                    LocalPlayer.state:set('laserOn', true, true)
+                if config.supportedWeapons.checkcomponent and not hasFlashlightComponent(ped, pedWeapon) then
+                    laserSight = false
+                    if laserOn then
+                        LocalPlayer.state:set('laserOn', false, true)
+                    end
+                    TriggerServerEvent("LSLaser:Set", false)
+                else
+                    if not laserOn then
+                        LocalPlayer.state:set('laserOn', true, true)
+                    end
+                    local rotation = GetGameplayCamRot()
+                    directionMain = RotationToDirection(rotation)
+                    LocalPlayer.state:set('direction', directionMain, true)
                 end
-                local rotation = GetGameplayCamRot()
-                directionMain = RotationToDirection(rotation)
-                LocalPlayer.state:set('direction', directionMain, true)
             else
                 if laserOn then
                     LocalPlayer.state:set('laserOn', false, true)
@@ -130,4 +141,11 @@ function RotationToDirection(rotation)
 		math.cos(adjustedRotation.z) * math.abs(math.cos(adjustedRotation.x)), 
 		math.sin(adjustedRotation.x))
 	return direction
+end
+
+function hasFlashlightComponent(ped, weapon)
+    local piAttached = HasPedGotWeaponComponent(ped, weapon, `COMPONENT_AT_PI_FLSH`)
+    local arAttached = HasPedGotWeaponComponent(ped, weapon, `COMPONENT_AT_PI_FLSH`)
+
+    return piAttached or arAttached
 end

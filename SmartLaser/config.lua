@@ -23,6 +23,7 @@ config = {
 }
 
 config.supportedWeapons = {
+    checkcomponent = true, -- If true, the script will check if the weapon has the flashlight component before applying the laser
     [`WEAPON_PISTOL`] = {
         -- If these values aren't set, the default value will be used
         offSet = {0.0, 0.00, 0.025}, -- Laser offSet from gun
